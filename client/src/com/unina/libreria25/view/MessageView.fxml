@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.unina.libreria25.controller.MessageViewController"
+      spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+    <Label text="I tuoi messaggi" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+    <TableView fx:id="msgTable" prefWidth="700" prefHeight="400">
+        <columns>
+            <TableColumn fx:id="colData" text="Data" prefWidth="150" />
+            <TableColumn fx:id="colTesto" text="Messaggio" prefWidth="400" />
+            <TableColumn fx:id="colAzione" text="Azione" prefWidth="120" />
+        </columns>
+    </TableView>
+    <Button text="⬅ Torna indietro" onAction="#handleBack" />
+</VBox>

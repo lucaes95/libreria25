@@ -1,0 +1,33 @@
+# C / C++
+*.o
+*.out
+*.a
+*.so
+*.exe
+build/
+cmake-build-*/
+
+# Java/Kotlin
+*.class
+*.jar
+*.war
+*.ear
+target/
+build/
+.gradle/
+.gradle-cache/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Segreti / config locali
+.env
+*.keystore
+

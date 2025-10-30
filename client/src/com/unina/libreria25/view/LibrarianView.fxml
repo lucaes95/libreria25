@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.unina.libreria25.controller.LibrarianViewController"
+      prefWidth="960.0" prefHeight="500.0"
+      spacing="10.0"
+      style="-fx-padding: 20;">
+    
+    <children>
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <children>
+                <Label fx:id="welcomeLabel"
+                       style="-fx-font-size: 16px; -fx-font-weight: bold;"
+                       text="Benvenuto, Libraio!" />
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="logoutBtn" text="Logout" onAction="#handleLogout"/>
+            </children>
+        </HBox>
+
+        <!-- Tabella dei prestiti -->
+        <TableView fx:id="prestitiTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colUtente" text="Utente" prefWidth="100"/>
+                <TableColumn fx:id="colTitolo" text="Titolo" prefWidth="180"/>
+                <TableColumn fx:id="colScadenza" text="Scadenza" prefWidth="120"/>
+                <TableColumn fx:id="colCopieDisponibili" text="Disponibili" prefWidth="100"/>
+                <TableColumn fx:id="colCopieInPrestito" text="In Prestito" prefWidth="100"/>
+                <TableColumn fx:id="colAzione" text="Azione" prefWidth="100"/>
+            </columns>
+            <placeholder>
+                <Label text="Nessun prestito trovato"/>
+            </placeholder>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+            </columnResizePolicy>
+        </TableView>
+    </children>
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+</VBox>

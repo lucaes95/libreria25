@@ -1,0 +1,128 @@
+{
+  "Libro": [
+    {
+      "codLibro": 1,
+      "titolo": "Il nome della rosa",
+      "autore": "Umberto Eco"
+    },
+    {
+      "codLibro": 2,
+      "titolo": "Cent'anni di solitudine",
+      "autore": "Gabriel García Márquez"
+    },
+    {
+      "codLibro": 3,
+      "titolo": "1984",
+      "autore": "George Orwell"
+    },
+    {
+      "codLibro": 4,
+      "titolo": "Orgoglio e pregiudizio",
+      "autore": "Jane Austen"
+    },
+    {
+      "codLibro": 5,
+      "titolo": "La coscienza di Zeno",
+      "autore": "Italo Svevo"
+    },
+    {
+      "codLibro": 6,
+      "titolo": "Il signore degli anelli",
+      "autore": "J.R.R. Tolkien"
+    },
+    {
+      "codLibro": 7,
+      "titolo": "I promessi sposi",
+      "autore": "Alessandro Manzoni"
+    },
+    {
+      "codLibro": 8,
+      "titolo": "Don Chisciotte della Mancia",
+      "autore": "Miguel de Cervantes"
+    },
+    {
+      "codLibro": 9,
+      "titolo": "La divina commedia",
+      "autore": "Dante Alighieri"
+    },
+    {
+      "codLibro": 10,
+      "titolo": "Harry Potter e la pietra filosofale",
+      "autore": "J.K. Rowling"
+    },
+    {
+      "codLibro": 11,
+      "titolo": "Guerra e pace",
+      "autore": "Lev Tolstoj"
+    },
+    {
+      "codLibro": 12,
+      "titolo": "Moby Dick",
+      "autore": "Herman Melville"
+    },
+    {
+      "codLibro": 13,
+      "titolo": "Il piccolo principe",
+      "autore": "Antoine de Saint-Exupéry"
+    },
+    {
+      "codLibro": 14,
+      "titolo": "Frankenstein",
+      "autore": "Mary Shelley"
+    },
+    {
+      "codLibro": 15,
+      "titolo": "Cime tempestose",
+      "autore": "Emily Brontë"
+    },
+    {
+      "codLibro": 16,
+      "titolo": "Il ritratto di Dorian Gray",
+      "autore": "Oscar Wilde"
+    },
+    {
+      "codLibro": 17,
+      "titolo": "Anna Karenina",
+      "autore": "Lev Tolstoj"
+    },
+    {
+      "codLibro": 18,
+      "titolo": "Fahrenheit 451",
+      "autore": "Ray Bradbury"
+    },
+    {
+      "codLibro": 19,
+      "titolo": "Il fu Mattia Pascal",
+      "autore": "Luigi Pirandello"
+    },
+    {
+      "codLibro": 20,
+      "titolo": "La metamorfosi",
+      "autore": "Franz Kafka"
+    }
+  ],
+  "Libreria": [
+    { "codLibro": 1, "copie": 4 },
+    { "codLibro": 2, "copie": 7 },
+    { "codLibro": 3, "copie": 2 },
+    { "codLibro": 4, "copie": 9 },
+    { "codLibro": 5, "copie": 3 },
+    { "codLibro": 6, "copie": 5 },
+    { "codLibro": 7, "copie": 6 },
+    { "codLibro": 8, "copie": 8 },
+    { "codLibro": 9, "copie": 10 },
+    { "codLibro": 10, "copie": 2 },
+    { "codLibro": 11, "copie": 7 },
+    { "codLibro": 12, "copie": 1 },
+    { "codLibro": 13, "copie": 9 },
+    { "codLibro": 14, "copie": 5 },
+    { "codLibro": 15, "copie": 4 },
+    { "codLibro": 16, "copie": 6 },
+    { "codLibro": 17, "copie": 3 },
+    { "codLibro": 18, "copie": 8 },
+    { "codLibro": 19, "copie": 7 },
+    { "codLibro": 20, "copie": 2 }
+  ]
+}
+
+
