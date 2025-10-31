@@ -159,8 +159,33 @@ public class MainViewController {
                 new Alert(Alert.AlertType.INFORMATION, "Prestito registrato con successo!").show();
 
             } else if (ServerResponses.CHECKOUT_FAIL_LIMIT.equalsIgnoreCase(response)) {
-                new Alert(Alert.AlertType.WARNING,
-                        "Operazione fallita: Hai raggiunto il limite massimo di 3 prestiti contemporanei.").show();
+                int cached = networkService.getCachedMaxLoans();
+                if (cached > 0) {
+                    new Alert(Alert.AlertType.WARNING,
+                            "Operazione fallita: Hai raggiunto il limite massimo di " + cached
+                                    + " prestiti contemporanei.")
+                            .show();
+                } else {
+                    javafx.concurrent.Task<Integer> t = new javafx.concurrent.Task<>() {
+                        @Override
+                        protected Integer call() throws Exception {
+                            return networkService.fetchMaxLoans();
+                        }
+                    };
+                    t.setOnSucceeded(ev2 -> {
+                        int limit = t.getValue();
+                        new Alert(Alert.AlertType.WARNING,
+                                "Operazione fallita: Hai raggiunto il limite massimo di " + limit
+                                        + " prestiti contemporanei.")
+                                .show();
+                    });
+                    t.setOnFailed(ev2 -> {
+                        new Alert(Alert.AlertType.WARNING,
+                                "Operazione fallita: Hai raggiunto il limite massimo di prestiti contemporanei.")
+                                .show();
+                    });
+                    new Thread(t).start();
+                }
 
             } else if ("CHECKOUT_FAIL_NOT_AVAILABLE".equalsIgnoreCase(response)) {
                 new Alert(Alert.AlertType.WARNING,

@@ -1,6 +1,7 @@
 #include "commands.h"
 #include "init.h"
 #include "init_data.h"
+#include "settings.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -22,12 +23,11 @@
 #define MAXLINE 1024
 #define MAX_CLIENTS 100 // Limite clienti online nello stesso momento
 #define MAX_CART 3      // Limite libri nel carrello
-#define MAX_PRESTITI 3  // LIMITE PRESTITI PER UTENTE
+// LIMITE PRESTITI PER UTENTE RIMOSSO
 
 ClientSession clients[MAX_CLIENTS];
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t libri_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 
 sqlite3 *db = NULL;
 
@@ -98,7 +98,7 @@ void *client_thread(void *arg) {
 
 // --- Main ---
 int main() {
-
+  settings_get_max_prestiti();
   // FIX: (CRITICO)
   // Non puoi usare sqlite3_open() in un programma multi-thread
   // che condivide la connessione 'db'. Questo corromperà il DB.

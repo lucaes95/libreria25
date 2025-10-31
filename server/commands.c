@@ -1,6 +1,7 @@
 #include "commands.h" // La nostra nuova intestazione
 
 // Include necessari per le funzioni di questo file
+#include "settings.h"
 #include <sqlite3.h> // Includi questo
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +13,7 @@
 // #include "init.h" (se serve)
 
 #define MAXLINE 1024
-#define MAX_PRESTITI 3 // LIMITE PRESTITI PER UTENTE
+// LIMITE PRESTITI PER UTENTE RIMOSSO
 
 // --- Definizione Tipi Interni ---
 // (Questi sono "privati" per commands.c)
@@ -24,6 +25,35 @@ typedef struct {
   CommandHandlerFunc handler;
   int requires_login;
 } Command;
+
+static void handle_get_max_loans(int index, const char *args) {
+  int fd = clients[index].fd;
+  int local_limit = settings_get_max_prestiti();
+  char buf[64];
+  snprintf(buf, sizeof(buf), "MAX_LOANS %d\n", local_limit);
+  send(fd, buf, strlen(buf), 0);
+}
+
+static void handle_set_max_loans(int index, const char *args) {
+  int fd = clients[index].fd;
+  pthread_mutex_lock(&clients_mutex);
+  int is_librarian = clients[index].is_librarian;
+  pthread_mutex_unlock(&clients_mutex);
+  if (!is_librarian) {
+    send(fd, "PERMISSION_DENIED\n", 18, 0);
+    return;
+  }
+  int n;
+  if (sscanf(args, "%d", &n) != 1 || n <= 0 || n > 20) {
+    send(fd, "SET_MAX_LOANS_FAIL\n", 20, 0);
+    return;
+  }
+  if (settings_set_max_prestiti(n) == 0) {
+    send(fd, "SET_MAX_LOANS_OK\n", 17, 0);
+  } else {
+    send(fd, "SET_MAX_LOANS_FAIL\n", 20, 0);
+  }
+}
 
 // --- 1. Implementazione degli Handler (static) ---
 // (static = visibili solo dentro questo file)
@@ -238,7 +268,7 @@ static void handle_checkout(int index, const char *args) {
   if (prestiti_attuali == -1) {
     send(fd, "CHECKOUT_FAIL_DB_ERROR\n", 23, 0);
     return;
-  } else if (prestiti_attuali + local_count > MAX_PRESTITI) {
+  } else if (prestiti_attuali + local_count > settings_get_max_prestiti()) {
     send(fd, "CHECKOUT_FAIL_LIMIT\n", 20, 0);
     return;
   }
@@ -537,6 +567,8 @@ static const Command command_table[] = {
     // Comandi Pubblici (requires_login = 0)
     {"REGISTER", handle_register, 0},
     {"LOGIN", handle_login, 0},
+    {"GET_MAX_LOANS", handle_get_max_loans, 1},
+    {"SET_MAX_LOANS", handle_set_max_loans, 1},
     {"LIST_BOOKS", handle_list_books, 0},
     {"ADD_CART", handle_add_cart, 0},
     {"LIST_CART", handle_list_cart, 0},

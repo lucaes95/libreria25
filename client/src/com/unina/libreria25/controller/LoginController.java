@@ -15,12 +15,18 @@ import javafx.stage.Stage;
 
 public class LoginController {
 
-    @FXML private TextField usernameField;
-    @FXML private PasswordField passwordField;
-    @FXML private Button loginBtn;
-    @FXML private Button registerBtn;
-    @FXML private Label statusLabel;
-    @FXML private ProgressIndicator progressIndicator;
+    @FXML
+    private TextField usernameField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private Button loginBtn;
+    @FXML
+    private Button registerBtn;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private ProgressIndicator progressIndicator;
 
     private NetworkService networkService;
     private Stage stage;
@@ -51,12 +57,12 @@ public class LoginController {
             String response = loginTask.getValue();
 
             if ("LOGIN_OK".equalsIgnoreCase(response)) {
+                // utente normale: prima fetch del limite, poi vai alla main view
                 caricaMainView(user);
-            } 
-            else if ("LOGIN_LIBRARIAN".equalsIgnoreCase(response)) {
+            } else if ("LOGIN_LIBRARIAN".equalsIgnoreCase(response)) {
+                // libraio: stessa cosa
                 caricaLibrarianView(user);
-            } 
-            else {
+            } else {
                 statusLabel.setText("Login fallito! Credenziali errate.");
             }
         });
@@ -133,49 +139,49 @@ public class LoginController {
             }
         });
 
-        booksTask.setOnFailed(ev -> 
-            new Alert(Alert.AlertType.ERROR, "Errore durante il caricamento dei libri.").show()
-        );
+        booksTask
+                .setOnFailed(ev -> new Alert(Alert.AlertType.ERROR, "Errore durante il caricamento dei libri.").show());
 
         new Thread(booksTask).start();
     }
 
     /** ✅ Carica la vista per il LIBRAIO */
     private void caricaLibrarianView(String username) {
-    Task<ObservableList<Libro>> libriTask = new Task<>() {
-        @Override
-        protected ObservableList<Libro> call() throws Exception {
-            return networkService.getBooks(); // opzionale
-        }
-    };
+        Task<ObservableList<Libro>> libriTask = new Task<>() {
+            @Override
+            protected ObservableList<Libro> call() throws Exception {
+                return networkService.getBooks(); // opzionale
+            }
+        };
 
-    libriTask.setOnSucceeded(ev -> {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/unina/libreria25/view/LibrarianView.fxml"));
-            Parent root = loader.load();
+        libriTask.setOnSucceeded(ev -> {
+            try {
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/com/unina/libreria25/view/LibrarianView.fxml"));
+                Parent root = loader.load();
 
-            Scene librarianScene = new Scene(root);
-            LibrarianViewController controller = loader.getController();
-            controller.initData(stage, librarianScene, networkService, username, FXCollections.observableArrayList());
+                Scene librarianScene = new Scene(root);
+                LibrarianViewController controller = loader.getController();
+                controller.initData(stage, librarianScene, networkService, username,
+                        FXCollections.observableArrayList());
 
-            stage.setScene(librarianScene);
-            stage.setTitle("Libreria - Libraio");
-            stage.centerOnScreen();
+                stage.setScene(librarianScene);
+                stage.setTitle("Libreria - Libraio");
+                stage.centerOnScreen();
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            new Alert(Alert.AlertType.ERROR,
-                "Impossibile caricare la vista del libraio:\n" + ex.getMessage()).show();
-        }
-    });
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                new Alert(Alert.AlertType.ERROR,
+                        "Impossibile caricare la vista del libraio:\n" + ex.getMessage()).show();
+            }
+        });
 
-    libriTask.setOnFailed(ev ->
-        new Alert(Alert.AlertType.ERROR, "Errore durante il caricamento dei dati iniziali del libraio.").show()
-    );
+        libriTask.setOnFailed(
+                ev -> new Alert(Alert.AlertType.ERROR, "Errore durante il caricamento dei dati iniziali del libraio.")
+                        .show());
 
-    new Thread(libriTask).start();
-}
-
+        new Thread(libriTask).start();
+    }
 
     private void toggleControls(boolean busy) {
         progressIndicator.setVisible(busy);

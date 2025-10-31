@@ -5,11 +5,12 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/17"
+<VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.unina.libreria25.controller.LibrarianViewController"
       prefWidth="960.0" prefHeight="500.0"
@@ -25,6 +26,17 @@
                        text="Benvenuto, Libraio!" />
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button fx:id="logoutBtn" text="Logout" onAction="#handleLogout"/>
+            </children>
+        </HBox>
+
+        <!-- Barra gestione prestiti massimi -->
+        <HBox spacing="8" alignment="CENTER_LEFT" style="-fx-padding: 8;">
+            <children>
+                <Label text="Prestiti massimi:"/>
+                <TextField fx:id="txtMaxLoans" prefWidth="80" onAction="#onMaxLoansEnter"/>
+                <Button fx:id="btnReadMaxLoans" text="Leggi" onAction="#onReadMaxLoans"/>
+                <Button fx:id="btnSaveMaxLoans" text="Salva" onAction="#onSaveMaxLoans"/>
+                <Label fx:id="lblMaxLoansStatus" text=""/>
             </children>
         </HBox>
 

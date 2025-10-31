@@ -1,4 +1,5 @@
 package com.unina.libreria25.service;
+
 import com.unina.libreria25.model.Libro;
 import com.unina.libreria25.model.Messaggio;
 import com.unina.libreria25.model.Prestito;
@@ -16,6 +17,48 @@ public class NetworkService {
     private PrintWriter out;
     // Attiva/disattiva log di debug
     private static final boolean DEBUG = true;
+
+    // --- in cima alla classe ---
+    private int cachedMaxLoans = -1;
+
+    public int getCachedMaxLoans() {
+        return cachedMaxLoans;
+    }
+
+    public int getOrFetchMaxLoans() throws IOException {
+        if (cachedMaxLoans > 0)
+            return cachedMaxLoans; // cache calda
+        return fetchMaxLoans(); // fa GET_MAX_LOANS e popola cachedMaxLoans
+    }
+
+    public int setMaxLoansAndGet(int value) throws IOException {
+        String cmd = "SET_MAX_LOANS " + value;
+        out.println(cmd);
+        out.flush();
+        String resp = safeReadLine();
+
+        if (!"SET_MAX_LOANS_OK".equals(resp)) {
+            throw new IOException("SET fallito: " + resp);
+        }
+        // leggo il valore effettivo scritto (fonte di verità = server)
+        return fetchMaxLoans();
+    }
+
+    // --- nuova funzione ---
+    public int fetchMaxLoans() throws IOException {
+        out.println("GET_MAX_LOANS");
+        out.flush();
+        String resp = safeReadLine(); // es. "MAX_LOANS 5"
+        if (resp != null && resp.startsWith("MAX_LOANS")) {
+            String[] parts = resp.split("\\s+");
+            if (parts.length >= 2) {
+                int val = Integer.parseInt(parts[1]);
+                cachedMaxLoans = val; // memorizzo per la UI
+                return val;
+            }
+        }
+        throw new IOException("Risposta non valida da GET_MAX_LOANS: " + resp);
+    }
 
     private void log(String msg) {
         if (DEBUG)
