@@ -30,15 +30,16 @@
         </HBox>
 
         <!-- Barra gestione prestiti massimi -->
-        <HBox spacing="8" alignment="CENTER_LEFT" style="-fx-padding: 8;">
-            <children>
-                <Label text="Prestiti massimi:"/>
-                <TextField fx:id="txtMaxLoans" prefWidth="80" onAction="#onMaxLoansEnter"/>
-                <Button fx:id="btnReadMaxLoans" text="Leggi" onAction="#onReadMaxLoans"/>
-                <Button fx:id="btnSaveMaxLoans" text="Salva" onAction="#onSaveMaxLoans"/>
-                <Label fx:id="lblMaxLoansStatus" text=""/>
-            </children>
-        </HBox>
+    <HBox spacing="8" alignment="CENTER_LEFT" style="-fx-padding: 8;">
+        <children>
+            <Label text="Prestiti massimi:"/>
+            <TextField fx:id="txtMaxLoans" prefWidth="80" onAction="#onMaxLoansEnter"/>
+            <Button fx:id="btnSaveMaxLoans" text="Salva" onAction="#onSaveMaxLoans"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Aggiorna" onAction="#onRefresh"/>
+            <Label fx:id="lblMaxLoansStatus" text=""/>
+        </children>
+    </HBox>
 
         <!-- Tabella dei prestiti -->
         <TableView fx:id="prestitiTable" VBox.vgrow="ALWAYS">

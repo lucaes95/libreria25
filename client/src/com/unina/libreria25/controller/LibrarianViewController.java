@@ -62,18 +62,7 @@ public class LibrarianViewController {
         triggerReadMaxLoans();
 
         // Carica i dati dei prestiti dal server
-        Task<ObservableList<Prestito>> loadPrestitiTask = new Task<>() {
-            @Override
-            protected ObservableList<Prestito> call() throws Exception {
-                return networkService.getAllPrestiti();
-            }
-        };
-
-        loadPrestitiTask.setOnSucceeded(e -> prestitiTable.setItems(loadPrestitiTask.getValue()));
-        loadPrestitiTask.setOnFailed(
-                e -> new Alert(Alert.AlertType.ERROR, "Errore nel caricamento dei prestiti dal server.").show());
-
-        new Thread(loadPrestitiTask).start();
+        reloadPrestiti();
     }
 
     @FXML
@@ -82,9 +71,37 @@ public class LibrarianViewController {
         onSaveMaxLoans();
     }
 
+    // NUOVO handler per il bottone "Aggiorna"
     @FXML
-    private void onReadMaxLoans() { // collegalo al bottone "Leggi"
-        triggerReadMaxLoans();
+    private void onRefresh() {
+        reloadPrestiti();
+    }
+
+    // Estrai la logica di caricamento in un metodo riusabile
+    private void reloadPrestiti() {
+        if (networkService == null)
+            return;
+
+        // (opzionale) feedback visivo
+        lblMaxLoansStatus.setText("Aggiornamento in corso…");
+
+        Task<ObservableList<Prestito>> loadPrestitiTask = new Task<>() {
+            @Override
+            protected ObservableList<Prestito> call() throws Exception {
+                return networkService.getAllPrestiti();
+            }
+        };
+
+        loadPrestitiTask.setOnSucceeded(e -> {
+            prestitiTable.setItems(loadPrestitiTask.getValue());
+            lblMaxLoansStatus.setText("Lista aggiornata");
+        });
+        loadPrestitiTask.setOnFailed(e -> {
+            new Alert(Alert.AlertType.ERROR, "Errore nell’aggiornamento della lista.").show();
+            lblMaxLoansStatus.setText("Errore caricamento");
+        });
+
+        new Thread(loadPrestitiTask).start();
     }
 
     private void triggerReadMaxLoans() {
@@ -164,6 +181,7 @@ public class LibrarianViewController {
             int updated = t.getValue();
             txtMaxLoans.setText(String.valueOf(updated));
             lblMaxLoansStatus.setText("Salvato: " + updated);
+            reloadPrestiti();
         });
         t.setOnFailed(e -> {
             Throwable ex = t.getException();
