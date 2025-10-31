@@ -2,6 +2,7 @@
 #include "init.h"
 #include "init_data.h"
 #include "settings.h"
+#include "session.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -16,58 +17,52 @@
 #ifndef SQLITE_OPEN_SERIALIZED
 #define SQLITE_OPEN_SERIALIZED 0x00040000
 #endif
-
 #include <sqlite3.h>
 
 #define PORT 12345 // Porta socket
 #define MAXLINE 1024
-#define MAX_CLIENTS 100 // Limite clienti online nello stesso momento
-#define MAX_CART 3      // Limite libri nel carrello
-// LIMITE PRESTITI PER UTENTE RIMOSSO
+#define MAX_CLIENTS 100 // solo backlog/listen; il limite reale ora è dinamico
+#define MAX_CART 3      // Limite libri nel carrello (per carrello sessione)
 
-ClientSession clients[MAX_CLIENTS];
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t libri_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 sqlite3 *db = NULL;
 
-// --- Gestione sessioni client ---
-int add_client(int fd) {
+// --- Gestione sessioni client (dinamico) ---
+static int add_client(int fd) {
   pthread_mutex_lock(&clients_mutex);
-  for (int i = 0; i < MAX_CLIENTS; i++) {
-    if (!clients[i].active) {
-      clients[i].active = 1;
-      clients[i].fd = fd;
-      clients[i].username[0] = '\0';
-      pthread_mutex_unlock(&clients_mutex);
-      return i;
-    }
-  }
+  int idx = session_create(fd);   // -1 se OOM
   pthread_mutex_unlock(&clients_mutex);
-  return -1; // troppi client
+  return idx;
 }
 
-void remove_client(int index) {
+static void remove_client(int index) {
   pthread_mutex_lock(&clients_mutex);
-  clients[index].active = 0;
-  clients[index].fd = -1;
-  clients[index].username[0] = '\0';
+  session_destroy(index);
   pthread_mutex_unlock(&clients_mutex);
 }
 
 void *client_thread(void *arg) {
   int index = *(int *)arg;
   free(arg);
-  int fd = clients[index].fd;
-  char buf[MAXLINE];
 
-  // Inizializzo la sessione
+  int fd = -1;
   pthread_mutex_lock(&clients_mutex);
-  clients[index].cart_size = 0;
-  clients[index].logged_in = 0; // <-- Usa il nuovo flag
-  memset(clients[index].cart, 0, sizeof(clients[index].cart));
-  memset(clients[index].username, 0, sizeof(clients[index].username));
+  ClientSession *cs = session_get(index);
+  if (cs) {
+    fd = cs->fd;
+    cs->cart_size = 0;
+    cs->logged_in = 0;
+    cs->is_librarian = 0;
+    memset(cs->cart, 0, sizeof(cs->cart));
+    memset(cs->username, 0, sizeof(cs->username));
+  }
   pthread_mutex_unlock(&clients_mutex);
+
+  if (fd < 0) return NULL; // sessione invalida (difensivo)
+
+  char buf[MAXLINE];
 
   while (1) {
     ssize_t n = recv(fd, buf, sizeof(buf) - 1, 0);
@@ -76,17 +71,10 @@ void *client_thread(void *arg) {
 
     buf[n] = '\0';
 
-    // --- 3. SEZIONE COMANDI COMPLETAMENTE SOSTITUITA ---
-
-    // Tutta la tua vecchia logica if/else/strcmp sparisce
-    // e viene sostituita da una singola chiamata:
     int should_exit = process_command(index, buf);
-
     if (should_exit) {
-      // La funzione ha gestito un LOGOUT, usciamo
       break;
     }
-    // --- FINE SOSTITUZIONE ---
 
     memset(buf, 0, sizeof(buf)); // pulizia buffer
   }
@@ -98,35 +86,38 @@ void *client_thread(void *arg) {
 
 // --- Main ---
 int main() {
+  // Precarica impostazioni (facoltativo, forza la creazione del file/settings)
   settings_get_max_prestiti();
-  // FIX: (CRITICO)
-  // Non puoi usare sqlite3_open() in un programma multi-thread
-  // che condivide la connessione 'db'. Questo corromperà il DB.
-  // DEVI usare sqlite3_open_v2 e il flag SQLITE_OPEN_SERIALIZED.
-  // Questo flag FA PARTE della libreria sqlite3, non è una
-  // libreria "extra". È il modo corretto in C per usare
-  // sqlite3 con pthread.
+
+  // Init session manager dinamico
+  if (sessions_init(128) != 0) {
+    fprintf(stderr, "Errore init session manager\n");
+    return 1;
+  }
+
+  // Connessione SQLite thread-safe
   if (sqlite3_open_v2("libreria.db", &db,
                       SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE |
                           SQLITE_OPEN_SERIALIZED,
                       NULL) != SQLITE_OK) {
     fprintf(stderr, "Errore apertura DB (thread-safe): %s\n",
             sqlite3_errmsg(db));
+    sessions_shutdown();
     return 1;
   }
-
-  /* --- La tua riga originale (ERRATA) è stata rimossa ---
-  if (sqlite3_open("libreria.db", &db) != SQLITE_OK) {
-    fprintf(stderr, "Errore apertura DB: %s\n", sqlite3_errmsg(db));
-    return 1;
-  }
-  */
 
   // Inizializza le tabelle usando l'handle appena aperto
   init_db();
   populate_db_from_json("data/data.json");
 
   int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (listenfd < 0) {
+    perror("socket");
+    sqlite3_close(db);
+    sessions_shutdown();
+    return 1;
+  }
+
   struct sockaddr_in servaddr = {0};
   servaddr.sin_family = AF_INET;
   servaddr.sin_addr.s_addr = INADDR_ANY;
@@ -134,8 +125,20 @@ int main() {
 
   int opt = 1;
   setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-  bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
-  listen(listenfd, MAX_CLIENTS);
+  if (bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+    perror("bind");
+    close(listenfd);
+    sqlite3_close(db);
+    sessions_shutdown();
+    return 1;
+  }
+  if (listen(listenfd, MAX_CLIENTS) < 0) {
+    perror("listen");
+    close(listenfd);
+    sqlite3_close(db);
+    sessions_shutdown();
+    return 1;
+  }
 
   printf("Server avviato su porta %d\n", PORT);
 
@@ -143,8 +146,17 @@ int main() {
     struct sockaddr_in cli;
     socklen_t clilen = sizeof(cli);
     int fd = accept(listenfd, (struct sockaddr *)&cli, &clilen);
+    if (fd < 0) {
+      perror("accept");
+      continue;
+    }
 
     int *index = malloc(sizeof(int));
+    if (!index) {
+      send(fd, "SERVER_FULL\n", 12, 0);
+      close(fd);
+      continue;
+    }
     *index = add_client(fd);
     if (*index == -1) {
       send(fd, "SERVER_FULL\n", 12, 0);
@@ -154,10 +166,19 @@ int main() {
     }
 
     pthread_t tid;
-    pthread_create(&tid, NULL, client_thread, index);
+    if (pthread_create(&tid, NULL, client_thread, index) != 0) {
+      // Se fallisce il thread, libera la sessione
+      close(fd);
+      remove_client(*index);
+      free(index);
+      continue;
+    }
     pthread_detach(tid);
   }
 
+  // (In pratica non si arriva qui)
+  close(listenfd);
   sqlite3_close(db);
+  sessions_shutdown();
   return 0;
 }

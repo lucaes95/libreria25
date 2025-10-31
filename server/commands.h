@@ -4,11 +4,12 @@
 #include <pthread.h> // Serve per pthread_mutex_t
 
 #define MAX_CART 3
-#define MAX_CLIENTS 100
+#define MAX_CLIENTS 100 // opzionale: non è più il limite reale, lasciato per compatibilità
 
 // --- Struttura dati sessione ---
-// (Spostata qui da server.c)
-typedef struct {
+// (Usata da server/commands e definita qui per accesso ai campi)
+// DOPO (con tag) ✅
+typedef struct ClientSession {
   int active;
   int fd;
   char username[64];
@@ -19,19 +20,15 @@ typedef struct {
 } ClientSession;
 
 // --- Dati globali "esterni" ---
-// Diciamo a questo file che 'clients' e 'db' esistono 
-// e che verranno definiti in un altro file (server.c)
-extern ClientSession clients[MAX_CLIENTS];
+// Niente più 'clients[]': le sessioni sono gestite dal session manager dinamico.
 extern pthread_mutex_t clients_mutex;
 extern struct sqlite3 *db; // Includi sqlite3.h in server.c e commands.c
 
-
 // --- Funzione Pubblica di Smistamento ---
 /**
- * Analizza il buffer ricevuto dal client ed esegue il comando
- * corrispondente.
- * * @param index L'indice del client nell'array 'clients'.
- * @param buf Il buffer contenente il comando (verrà modificato!).
+ * Analizza il buffer ricevuto dal client ed esegue il comando corrispondente.
+ * @param index Handle della sessione nel registry dinamico (non più indice di array).
+ * @param buf   Buffer del comando (verrà modificato per il parsing).
  * @return 0 per continuare, 1 se il client ha richiesto il logout.
  */
 int process_command(int index, char *buf);
