@@ -1,4 +1,4 @@
-# Libreria – Client/Server
+# Libreria25 – Client/Server
 Progetto di discussione esame di laboratorio di sistemi operativi, Informatica, Federico II.
 Il sistema vuole simulare una libreria dove i clienti possono registrarsi e loggare per cercare libri disponibili, metterli nel carrello, prenderli in prestito, e restituirli. Inoltre prevede l'accesso del libraio, utente "speciale". Il libraio può osservare sia i libri disponibili che quelli non disponibili, settare un limite ai prestiti degli utenti e in caso di scadenza può inviargli un messaggio per invitare il cliente alla restituzione.
 
